@@ -2249,7 +2249,7 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
       {loading?<div style={{display:"flex",justifyContent:"center",padding:60}}><Spinner size={36}/></div>:<>
         {tab==="s1"&&apprenantsS1&&<StatsSession apprenants={apprenantsS1} notes={notesS1||{}} modules={modules} metiers={metiers} annee={annee} session="1ère Session"/>}
         {tab==="s2"&&apprenantsS2&&<StatsSession apprenants={apprenantsS2} notes={notesS2||{}} modules={modules} metiers={metiers} annee={annee} session="2ème Session"/>}
-        {tab==="globales"&&apprenantsS1&&apprenantsS2&&<StatsGlobales apprenants={Array.from(new Map([...(apprenantsS1||[]),...(apprenantsS2||[])].map(a=>[a.id,a])).values())} notesS1={notesS1||{}} notesS2={notesS2||{}} modules={modules} metiers={metiers} annee={annee} calcMoyGen={calcMoyGen}/>}
+        {tab==="globales"&&apprenantsS1&&apprenantsS2&&<StatsGlobales apprenantsS1={apprenantsS1} apprenantsS2={apprenantsS2} notesS1={notesS1||{}} notesS2={notesS2||{}} modules={modules} metiers={metiers} annee={annee}/>}
       </>}
     </div>
   );
@@ -2445,20 +2445,41 @@ function StatsSession({apprenants,notes,modules,metiers,annee,session}){
 }
 
 // ── Stats Globales (S1 + S2 + Moy Générale) ──────────────────────────────────
-function StatsGlobales({apprenants,notesS1,notesS2,modules,metiers,annee,calcMoyGen}){
+function StatsGlobales({apprenantsS1,apprenantsS2,notesS1,notesS2,modules,metiers,annee}){
   function modsFor(a){return modules.filter(m=>m.metierId===a.metierId||!m.metierId);}
 
+  // Map des apprenants par ID pour S1 et S2
+  const appsS1Map=new Map(apprenantsS1.map(a=>[a.id,a]));
+  const appsS2Map=new Map(apprenantsS2.map(a=>[a.id,a]));
+  
+  // Liste unifiée : tous les apprenants uniques (par ID)
+  const allAppIds=new Set([...appsS1Map.keys(),...appsS2Map.keys()]);
+  
   // Calcul pour chaque apprenant: moyS1, moyS2, moyGén
-  const enriched=apprenants.map(a=>{
-    const mods=modsFor(a);
-    const m1=calcMoy(notesS1[a.id],mods);
-    const m2=calcMoy(notesS2[a.id],mods);
-    const mg=calcMoyGen(a,notesS1,notesS2);
+  const enriched=Array.from(allAppIds).map(appId=>{
+    const appS1=appsS1Map.get(appId);
+    const appS2=appsS2Map.get(appId);
+    const app=appS2||appS1; // Utiliser les données les plus récentes (S2 si dispo)
+    
+    const mods=modsFor(app);
+    const m1=calcMoy(notesS1[appId],mods);
+    const m2=calcMoy(notesS2[appId],mods);
+    
+    // Moyenne générale = (2×S2 + S1) / 3
+    let mg=null;
+    if(m1!==null&&m2!==null){
+      mg=+((2*parseFloat(m2)+parseFloat(m1))/3).toFixed(2);
+    } else if(m2!==null) {
+      mg=parseFloat(m2);
+    } else if(m1!==null) {
+      mg=parseFloat(m1);
+    }
+    
     const hasMoyGen=mg!==null;
-    return{...a,moyS1:m1,moyS2:m2,moyGen:mg,hasMoyGen};
+    return{...app,moyS1:m1,moyS2:m2,moyGen:mg,hasMoyGen};
   });
 
-  // Stats globales CFPA — basées sur la moyenne générale (calculée à partir de S1 + S2)
+  // Stats globales CFPA — basées sur la moyenne générale
   function groupStats(list){
     const ev=list.filter(a=>a.hasMoyGen);
     const ad=ev.filter(a=>a.moyGen>=12);
