@@ -104,3 +104,4 @@ Activez GitHub Pages dans Settings → Pages → Branch: main
 ## 📱 Responsive
 - Desktop : sidebar latérale
 - Mobile : navigation en bas de l'écran
+
