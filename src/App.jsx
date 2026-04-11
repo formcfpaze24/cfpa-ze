@@ -2479,19 +2479,20 @@ function StatsGlobales({apprenantsS1,apprenantsS2,notesS1,notesS2,modules,metier
 
   // Stats globales CFPA — basées sur la moyenne générale
   function groupStats(list){
-    const ev=list.filter(a=>a.hasMoyGen);
-    const ad=ev.filter(a=>a.moyGen>=12);
-    const ref=ev.filter(a=>a.moyGen<12);
-    const fi=list.filter(a=>a.sexe==="F");
-    const moys=ev.map(a=>a.moyGen);
+    // Filtrer UNIQUEMENT les apprenants avec moyGen (S1 + S2)
+    const withMoyGen=list.filter(a=>a.hasMoyGen);
+    const ad=withMoyGen.filter(a=>a.moyGen>=12);
+    const ref=withMoyGen.filter(a=>a.moyGen<12);
+    const fi=withMoyGen.filter(a=>a.sexe==="F");
+    const moys=withMoyGen.map(a=>a.moyGen);
     const maxM=moys.length?Math.max(...moys):null;
     const minM=moys.length?Math.min(...moys):null;
     return{
-      total:list.length,filles:fi.length,garcons:list.length-fi.length,
-      evalués:ev.length,admis:ad.length,refusés:ref.length,
+      total:withMoyGen.length,filles:fi.length,garcons:withMoyGen.length-fi.length,
+      evalués:withMoyGen.length,admis:ad.length,refusés:ref.length,
       maxMoy:maxM?maxM.toFixed(2):null,minMoy:minM?minM.toFixed(2):null,
-      plusFort:maxM!==null?ev.filter(a=>a.moyGen===maxM):[],
-      plusFaible:minM!==null?ev.filter(a=>a.moyGen===minM):[],
+      plusFort:maxM!==null?withMoyGen.filter(a=>a.moyGen===maxM):[],
+      plusFaible:minM!==null?withMoyGen.filter(a=>a.moyGen===minM):[],
     };
   }
 
