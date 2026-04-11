@@ -2140,7 +2140,7 @@ function UtilisateursPage({allUsers,setAllUsers,metiers,niveaux,showToast,curren
 // ── STATISTIQUES ─────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
-  const[tab,setTab]=useState("s1"); // "s1" | "s2" | "globales"
+  const[tab,setTab]=useState(session===SESSIONS[1]?"s2":"s1"); // "s1" | "s2" | "globales"
   const[notesS1,setNotesS1]=useState(null);
   const[notesS2,setNotesS2]=useState(null);
   const[apprenantsS1,setApprenantsS1]=useState(null);
@@ -2167,16 +2167,9 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
     }).catch(e=>{console.error(e);setLoading(false);});
   },[annee]);
 
-  // Synchroniser la session courante avec les données passées par l'application
   useEffect(()=>{
-    if(session===SESSIONS[0]) {
-      setApprenantsS1(apprenants);
-      setNotesS1(notes);
-    } else {
-      setApprenantsS2(apprenants);
-      setNotesS2(notes);
-    }
-  },[session,apprenants,notes]);
+    setTab(session===SESSIONS[1]?"s2":"s1");
+  },[session]);
 
   // Calcul stats pour un set de notes donné
   function calcStats(appList,notesData,modsGetter) {
@@ -2241,6 +2234,11 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
     {id:"globales",label:"Statistiques Globales"},
   ];
 
+  const apprenantsStatS1 = session===SESSIONS[0] ? apprenants : apprenantsS1;
+  const notesStatS1 = session===SESSIONS[0] ? notes : notesS1||{};
+  const apprenantsStatS2 = session===SESSIONS[1] ? apprenants : apprenantsS2;
+  const notesStatS2 = session===SESSIONS[1] ? notes : notesS2||{};
+
   return(
     <div>
       <PageHeader title="Statistiques de Rendement" subtitle={`${NOM_CENTRE} · Année ${annee}`}
@@ -2256,8 +2254,8 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
       </div>
 
       {loading?<div style={{display:"flex",justifyContent:"center",padding:60}}><Spinner size={36}/></div>:<>
-        {tab==="s1"&&apprenantsS1&&<StatsSession apprenants={apprenantsS1} notes={notesS1||{}} modules={modules} metiers={metiers} annee={annee} session="1ère Session"/>}
-        {tab==="s2"&&apprenantsS2&&<StatsSession apprenants={apprenantsS2} notes={notesS2||{}} modules={modules} metiers={metiers} annee={annee} session="2ème Session"/>}
+        {tab==="s1"&&apprenantsStatS1&&<StatsSession apprenants={apprenantsStatS1} notes={notesStatS1} modules={modules} metiers={metiers} annee={annee} session="1ère Session"/>}
+        {tab==="s2"&&apprenantsStatS2&&<StatsSession apprenants={apprenantsStatS2} notes={notesStatS2} modules={modules} metiers={metiers} annee={annee} session="2ème Session"/>}
         {tab==="globales"&&apprenantsS1&&apprenantsS2&&<StatsGlobales apprenantsS1={apprenantsS1} apprenantsS2={apprenantsS2} notesS1={notesS1||{}} notesS2={notesS2||{}} modules={modules} metiers={metiers} annee={annee}/>}
       </>}
     </div>
