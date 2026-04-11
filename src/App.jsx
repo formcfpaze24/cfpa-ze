@@ -2167,6 +2167,17 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
     }).catch(e=>{console.error(e);setLoading(false);});
   },[annee]);
 
+  // Synchroniser la session courante avec les données passées par l'application
+  useEffect(()=>{
+    if(session===SESSIONS[0]) {
+      setApprenantsS1(apprenants);
+      setNotesS1(notes);
+    } else {
+      setApprenantsS2(apprenants);
+      setNotesS2(notes);
+    }
+  },[session,apprenants,notes]);
+
   // Calcul stats pour un set de notes donné
   function calcStats(appList,notesData,modsGetter) {
     return appList.map(a=>{
