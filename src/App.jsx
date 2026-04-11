@@ -2179,8 +2179,8 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
   // Stats d'un groupe d'apprenants enrichis
   function groupStats(enriched) {
     const evalués=enriched.filter(a=>a.evalué);
-    const admis=evalués.filter(a=>a.moy!==null&&parseFloat(a.moy)>=10);
-    const refusés=evalués.filter(a=>a.moy!==null&&parseFloat(a.moy)<10);
+    const admis=evalués.filter(a=>a.moy!==null&&parseFloat(a.moy)>=12);
+    const refusés=evalués.filter(a=>a.moy!==null&&parseFloat(a.moy)<12);
     const filles=enriched.filter(a=>a.sexe==="F");
     const moys=evalués.filter(a=>a.moy!==null).map(a=>parseFloat(a.moy));
     const maxMoy=moys.length?Math.max(...moys):null;
@@ -2220,9 +2220,7 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
       m2=calcMoy(n2[a.id],mods);
     }
     
-    if(m1===null&&m2===null) return null;
-    if(m2===null) return parseFloat(m1);
-    if(m1===null) return parseFloat(m2);
+    if(m1===null||m2===null) return null;
     return +((2*parseFloat(m2)+parseFloat(m1))/3).toFixed(2);
   }
 
