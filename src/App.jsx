@@ -2257,11 +2257,27 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
 function StatsSession({apprenants,notes,modules,metiers,annee,session}){
   function modsFor(a){return modules.filter(m=>m.metierId===a.metierId||!m.metierId);}
 
+  // Résoudre les notes : d'abord par ID, sinon par nom+prénom (cas import)
+  function resolveNotes(a){
+    if(notes[a.id]&&Object.keys(notes[a.id]).length>0) return notes[a.id];
+    const nomKey=(a.nom||"").toLowerCase().trim();
+    const prenomKey=(a.prenom||"").toLowerCase().trim();
+    for(const appId in notes){
+      const nd=notes[appId];
+      if(!nd||Object.keys(nd).length===0) continue;
+      if(nd.nom&&nd.prenom){
+        if(nd.nom.toLowerCase().trim()===nomKey&&nd.prenom.toLowerCase().trim()===prenomKey) return nd;
+      }
+    }
+    return undefined;
+  }
+
   // Enrichir tous les apprenants
   const enriched=apprenants.map(a=>{
     const mods=modsFor(a);
-    const moy=calcMoy(notes[a.id],mods);
-    return{...a,moy,evalué:notes[a.id]&&Object.keys(notes[a.id]).length>0};
+    const nd=resolveNotes(a);
+    const moy=calcMoy(nd,mods);
+    return{...a,moy,evalué:!!nd&&Object.keys(nd).length>0};
   });
 
   // Stats globales CFPA
@@ -2453,6 +2469,27 @@ function StatsGlobales({apprenantsS1,apprenantsS2,notesS1,notesS2,modules,metier
   // Liste unifiée : tous les apprenants uniques (par ID)
   const allAppIds=new Set([...appsS1Map.keys(),...appsS2Map.keys()]);
   
+  // Index des notes S1 par nom|prénom pour retrouver un apprenant même si l'ID a changé
+  function resolveNotesS1(app){
+    if(notesS1[app.id]&&Object.keys(notesS1[app.id]).length>0) return notesS1[app.id];
+    const nomKey=(app.nom||"").toLowerCase().trim();
+    const prenomKey=(app.prenom||"").toLowerCase().trim();
+    for(const appId in notesS1){
+      const nd=notesS1[appId];
+      if(!nd||Object.keys(nd).length===0) continue;
+      if(nd.nom&&nd.prenom){
+        if(nd.nom.toLowerCase().trim()===nomKey&&nd.prenom.toLowerCase().trim()===prenomKey) return nd;
+      }
+    }
+    // Chercher aussi dans appsS1Map par nom+prénom
+    for(const [id,a] of appsS1Map){
+      if((a.nom||"").toLowerCase().trim()===nomKey&&(a.prenom||"").toLowerCase().trim()===prenomKey){
+        if(notesS1[id]&&Object.keys(notesS1[id]).length>0) return notesS1[id];
+      }
+    }
+    return undefined;
+  }
+
   // Calcul pour chaque apprenant: moyS1, moyS2, moyGén
   const enriched=Array.from(allAppIds).map(appId=>{
     const appS1=appsS1Map.get(appId);
@@ -2460,16 +2497,15 @@ function StatsGlobales({apprenantsS1,apprenantsS2,notesS1,notesS2,modules,metier
     const app=appS2||appS1; // Utiliser les données les plus récentes (S2 si dispo)
     
     const mods=modsFor(app);
-    const m1=calcMoy(notesS1[appId],mods);
+    const ndS1=resolveNotesS1(app);
+    const m1=calcMoy(ndS1,mods);
     const m2=calcMoy(notesS2[appId],mods);
     
-    // Moyenne générale = (2×S2 + S1) / 3
-    // ⚠️ IMPORTANT: Doit avoir S1 ET S2 pour calculer la vraie moyenne générale
+    // Moyenne générale = (2×S2 + S1) / 3 — nécessite S1 ET S2
     let mg=null;
     if(m1!==null&&m2!==null){
       mg=+((2*parseFloat(m2)+parseFloat(m1))/3).toFixed(2);
     }
-    // Ne PAS faire de fallback sur S2 seul - on veut la moyenne générale complète
     
     const hasMoyGen=mg!==null;
     return{...app,moyS1:m1,moyS2:m2,moyGen:mg,hasMoyGen};
