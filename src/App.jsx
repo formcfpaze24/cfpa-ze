@@ -2466,14 +2466,12 @@ function StatsGlobales({apprenantsS1,apprenantsS2,notesS1,notesS2,modules,metier
     const m2=calcMoy(notesS2[appId],mods);
     
     // Moyenne générale = (2×S2 + S1) / 3
+    // ⚠️ IMPORTANT: Doit avoir S1 ET S2 pour calculer la vraie moyenne générale
     let mg=null;
     if(m1!==null&&m2!==null){
       mg=+((2*parseFloat(m2)+parseFloat(m1))/3).toFixed(2);
-    } else if(m2!==null) {
-      mg=parseFloat(m2);
-    } else if(m1!==null) {
-      mg=parseFloat(m1);
     }
+    // Ne PAS faire de fallback sur S2 seul - on veut la moyenne générale complète
     
     const hasMoyGen=mg!==null;
     return{...app,moyS1:m1,moyS2:m2,moyGen:mg,hasMoyGen};
