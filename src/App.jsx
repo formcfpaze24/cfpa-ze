@@ -2269,18 +2269,18 @@ function StatsSession({apprenants,notes,modules,metiers,annee,session}){
   // Stats globales CFPA
   function groupStats(list){
     const ev=list.filter(a=>a.evalué);
-    const ad=ev.filter(a=>a.moyGen!==null&&parseFloat(a.moyGen)>=12);
-    const ref=ev.filter(a=>a.moyGen!==null&&parseFloat(a.moyGen)<12);
+    const ad=ev.filter(a=>a.moy!==null&&parseFloat(a.moy)>=12);
+    const ref=ev.filter(a=>a.moy!==null&&parseFloat(a.moy)<12);
     const fi=list.filter(a=>a.sexe==="F");
-    const moys=ev.filter(a=>a.moyGen!==null).map(a=>parseFloat(a.moyGen)); // ⭐ Utiliser moyGen, pas moy
+    const moys=ev.filter(a=>a.moy!==null).map(a=>parseFloat(a.moy));
     const maxM=moys.length?Math.max(...moys):null;
     const minM=moys.length?Math.min(...moys):null;
     return{
       total:list.length,filles:fi.length,garcons:list.length-fi.length,
       evalués:ev.length,admis:ad.length,refusés:ref.length,
       maxMoy:maxM?maxM.toFixed(2):null,minMoy:minM?minM.toFixed(2):null,
-      plusFort:maxM!==null?ev.filter(a=>parseFloat(a.moyGen)===maxM):[],
-      plusFaible:minM!==null?ev.filter(a=>parseFloat(a.moyGen)===minM):[],
+      plusFort:maxM!==null?ev.filter(a=>parseFloat(a.moy)===maxM):[],
+      plusFaible:minM!==null?ev.filter(a=>parseFloat(a.moy)===minM):[],
     };
   }
 
