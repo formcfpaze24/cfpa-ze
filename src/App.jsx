@@ -2249,7 +2249,7 @@ function StatistiquesPage({apprenants,notes,modules,metiers,annee,session}) {
       {loading?<div style={{display:"flex",justifyContent:"center",padding:60}}><Spinner size={36}/></div>:<>
         {tab==="s1"&&apprenantsS1&&<StatsSession apprenants={apprenantsS1} notes={notesS1||{}} modules={modules} metiers={metiers} annee={annee} session="1ère Session"/>}
         {tab==="s2"&&apprenantsS2&&<StatsSession apprenants={apprenantsS2} notes={notesS2||{}} modules={modules} metiers={metiers} annee={annee} session="2ème Session"/>}
-        {tab==="globales"&&<StatsGlobales apprenants={apprenants} notesS1={notesS1||{}} notesS2={notesS2||{}} modules={modules} metiers={metiers} annee={annee} calcMoyGen={calcMoyGen}/>}
+        {tab==="globales"&&apprenantsS1&&apprenantsS2&&<StatsGlobales apprenants={Array.from(new Map([...(apprenantsS1||[]),...(apprenantsS2||[])].map(a=>[a.id,a])).values())} notesS1={notesS1||{}} notesS2={notesS2||{}} modules={modules} metiers={metiers} annee={annee} calcMoyGen={calcMoyGen}/>}
       </>}
     </div>
   );
