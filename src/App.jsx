@@ -110,8 +110,21 @@ function useDebounce(value, delay) {
 const sbSave = async (ann, ses, col, id, data) => {
   const pk = cle(ann, ses);
   if (col === "apprenants") {
-    const { error } = await supabase.from("apprenants").upsert({ id, periode_key: pk, ...data }, {onConflict: "id,periode_key"});
-    if (error) throw error;
+    const { error: insertError } = await supabase
+      .from("apprenants")
+      .insert({ id, periode_key: pk, ...data });
+    if (insertError) {
+      if (insertError.code === "23505") {
+        const { error: updateError } = await supabase
+          .from("apprenants")
+          .update({ ...data })
+          .eq("id", id)
+          .eq("periode_key", pk);
+        if (updateError) throw updateError;
+      } else {
+        throw insertError;
+      }
+    }
   } else if (col === "notes") {
     const { error } = await supabase.from("notes").upsert(
       { apprenant_id: id, periode_key: pk, data, updated_at: new Date().toISOString() },
@@ -648,8 +661,10 @@ export default function App() {
           });
           
           // Utiliser INSERT simple (pas d'upsert qui cause des problèmes)
-          const { error: e2 } = await supabase.from("apprenants").upsert(rows, { onConflict: "id,periode_key" });
-          if(e2) throw new Error("Import apprenants : "+e2.message);
+          const { error: e2 } = await supabase
+            .from("apprenants")
+           .insert(rows);
+if (e2 && e2.code !== "23505") throw new Error("Import apprenants : " + e2.message);
           console.log(`✅ ${data.length} apprenant(s) importé(s) avec succès`);
           rapport.push(data.length+" apprenant(s)");
         } else {
