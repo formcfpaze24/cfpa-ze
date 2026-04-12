@@ -110,7 +110,7 @@ function useDebounce(value, delay) {
 const sbSave = async (ann, ses, col, id, data) => {
   const pk = cle(ann, ses);
   if (col === "apprenants") {
-    const { error } = await supabase.from("apprenants").upsert({ id, periode_key: pk, ...data }, { onConflict: "id" });
+    const { error } = await supabase.from("apprenants").upsert({ id, periode_key: pk, ...data }, {onConflict: "id,periode_key"});
     if (error) throw error;
   } else if (col === "notes") {
     const { error } = await supabase.from("notes").upsert(
@@ -629,7 +629,7 @@ export default function App() {
           console.log(`📥 Import apprenants: ${data.length} depuis ${srcKey} vers ${periodeKey}, changeAnnee=${changeAnnee}`);
           
           // Préparer les apprenants à importer avec NOUVEAUX IDs
-          const rows=data.map(({id:_,periode_key:__,...rest})=>{
+          const rows = data.map(({ id: originalId, periode_key: __, ...rest }) => {
             let newNiveau=rest.niveau;
             
             // SEULEMENT si on change d'année ET moyenne >= 12, passer au niveau supérieur
@@ -644,12 +644,11 @@ export default function App() {
               }
             }
             
-            // 🔴 GÉNERER UN NOUVEL ID POUR ÉVITER LES CONFLITS
-            return {...rest,niveau:newNiveau,id:uid(),periode_key:periodeKey};
+            return { ...rest, niveau: newNiveau, id: originalId, periode_key: periodeKey };
           });
           
           // Utiliser INSERT simple (pas d'upsert qui cause des problèmes)
-          const {error:e2}=await supabase.from("apprenants").insert(rows);
+          const { error: e2 } = await supabase.from("apprenants").upsert(rows, { onConflict: "id,periode_key" });
           if(e2) throw new Error("Import apprenants : "+e2.message);
           console.log(`✅ ${data.length} apprenant(s) importé(s) avec succès`);
           rapport.push(data.length+" apprenant(s)");
@@ -2301,7 +2300,8 @@ function StatsSession({apprenants,notes,modules,metiers,annee,session}){
     return{
       total:list.length,filles:fi.length,garcons:list.length-fi.length,
       evalués:ev.length,admis:ad.length,refusés:ref.length,
-      maxMoy:maxM?maxM.toFixed(2):null,minMoy:minM?minM.toFixed(2):null,
+      maxMoy: maxM !== null ? maxM.toFixed(2) : null,
+      minMoy: minM !== null ? minM.toFixed(2) : null,
       plusFort:maxM!==null?ev.filter(a=>parseFloat(a.moy)===maxM):[],
       plusFaible:minM!==null?ev.filter(a=>parseFloat(a.moy)===minM):[],
     };
