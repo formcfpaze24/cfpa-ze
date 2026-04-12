@@ -7,4 +7,12 @@ const REPO_NAME = "cfpa-ze";
 export default defineConfig({
   plugins: [react()],
   base: process.env.NODE_ENV === "production" ? `/${REPO_NAME}/` : "/",
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+      }
+    }
+  }
 });
